@@ -1,6 +1,7 @@
 package main
 
 import (
+	"flag"
 	"log"
 	"time"
 
@@ -8,25 +9,33 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
 	_ "k8s.io/client-go/plugin/pkg/client/auth/gcp"
+	"k8s.io/client-go/rest"
 	"k8s.io/client-go/tools/clientcmd"
 )
 
-var replicas int32
+var (
+	zeroReplicas int32
+
+	kubeconfig = flag.String("kubeconfig", "", "absolute path to the kubeconfig file")
+)
 
 func init() {
 	log.SetPrefix("kube-shutdown-after: ")
 }
 
-func main() {
-	// creates the in-cluster config
-	// config, err := rest.InClusterConfig()
-	// if err != nil {
-	// 	log.Fatal(err)
-	// }
+func getConfig(cfg string) (*rest.Config, error) {
+	if *kubeconfig == "" {
+		return rest.InClusterConfig()
+	}
+	return clientcmd.BuildConfigFromFlags("", cfg)
+}
 
-	config, err := clientcmd.BuildConfigFromFlags("", "/Users/carlos/.kube/config")
+func main() {
+	flag.Parse()
+
+	config, err := getConfig(*kubeconfig)
 	if err != nil {
-		log.Fatal(err)
+		log.Fatalln("failed to get config:", err)
 	}
 
 	// creates the clientset
@@ -38,7 +47,7 @@ func main() {
 	for {
 		deploys, err := clientset.AppsV1beta2().Deployments(apiv1.NamespaceAll).List(metav1.ListOptions{})
 		if err != nil {
-			log.Fatal(err)
+			log.Fatalln("failed to get deployments:", err)
 		}
 		now := time.Now().Local()
 
@@ -51,18 +60,18 @@ func main() {
 			log.Printf("deployment %s is annotated with %s", deploy.GetName(), value)
 			t, err := time.Parse("15:04", value)
 			if err != nil {
-				log.Printf("%s is not in 15:04 format", value)
+				log.Printf("failed to parse `%s`: not in `15:04` format", value)
 				continue
 			}
 			if t.Hour() >= now.Hour() && t.Minute() >= now.Minute() {
 				log.Printf("its time, scaling down %s", deploy.GetName())
-				deploy.Spec.Replicas = &replicas
+				deploy.Spec.Replicas = &zeroReplicas
 				_, err := clientset.
 					AppsV1beta2().
 					Deployments(deploy.GetNamespace()).
 					Update(&deploy)
 				if err != nil {
-					log.Println("failed to scale down:", err)
+					log.Printf("failed to scale %s down: %s", deploy.GetName(), err)
 				}
 			}
 		}
