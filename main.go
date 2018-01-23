@@ -5,7 +5,9 @@ import (
 	"log"
 	"time"
 
+	"k8s.io/api/apps/v1beta2"
 	apiv1 "k8s.io/api/core/v1"
+
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
 	_ "k8s.io/client-go/plugin/pkg/client/auth/gcp"
@@ -21,13 +23,6 @@ var (
 
 func init() {
 	log.SetPrefix("kube-shutdown-after: ")
-}
-
-func getConfig(cfg string) (*rest.Config, error) {
-	if *kubeconfig == "" {
-		return rest.InClusterConfig()
-	}
-	return clientcmd.BuildConfigFromFlags("", cfg)
 }
 
 func main() {
@@ -49,32 +44,45 @@ func main() {
 		if err != nil {
 			log.Fatalln("failed to get deployments:", err)
 		}
-		now := time.Now().Local()
-
 		for _, deploy := range deploys.Items {
-			value, ok := deploy.Annotations["carlosbecker.com/shutdown-after"]
-			if !ok {
-				log.Println("deployment is not annotated, ignoring:", deploy.Name)
+			if !shouldScale(deploy) {
 				continue
 			}
-			log.Printf("deployment %s is annotated with %s", deploy.GetName(), value)
-			t, err := time.Parse("15:04", value)
-			if err != nil {
-				log.Printf("failed to parse `%s`: not in `15:04` format", value)
-				continue
-			}
-			if t.Hour() >= now.Hour() && t.Minute() >= now.Minute() && *deploy.Spec.Replicas > 0 {
-				log.Printf("scaling down %s", deploy.GetName())
-				deploy.Spec.Replicas = &zeroReplicas
-				_, err := clientset.
-					AppsV1beta2().
-					Deployments(deploy.GetNamespace()).
-					Update(&deploy)
-				if err != nil {
-					log.Printf("failed to scale %s down: %s", deploy.GetName(), err)
-				}
+			if err := scaleDown(clientset, deploy); err != nil {
+				log.Printf("failed to scale %s down: %s", deploy.GetName(), err)
 			}
 		}
 		time.Sleep(1 * time.Minute)
 	}
+}
+
+func shouldScale(deploy v1beta2.Deployment) bool {
+	now := time.Now().Local()
+	value, ok := deploy.Annotations["carlosbecker.com/shutdown-after"]
+	if !ok {
+		log.Println("deployment is not annotated, ignoring:", deploy.Name)
+		return false
+	}
+	log.Printf("deployment %s is annotated with %s", deploy.GetName(), value)
+	t, err := time.Parse("15:04", value)
+	if err != nil {
+		log.Printf("failed to parse `%s`: not in `15:04` format", value)
+		return false
+	}
+	return t.Hour() >= now.Hour() && t.Minute() >= now.Minute() && *deploy.Spec.Replicas > 0
+}
+
+func scaleDown(clientset *kubernetes.Clientset, deploy v1beta2.Deployment) error {
+	log.Printf("scaling down %s", deploy.GetName())
+	deploy.Spec.Replicas = &zeroReplicas
+	_, err := clientset.AppsV1beta2().Deployments(deploy.GetNamespace()).
+		Update(&deploy)
+	return err
+}
+
+func getConfig(cfg string) (*rest.Config, error) {
+	if *kubeconfig == "" {
+		return rest.InClusterConfig()
+	}
+	return clientcmd.BuildConfigFromFlags("", cfg)
 }
