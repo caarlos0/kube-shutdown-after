@@ -63,8 +63,8 @@ func main() {
 				log.Printf("failed to parse `%s`: not in `15:04` format", value)
 				continue
 			}
-			if t.Hour() >= now.Hour() && t.Minute() >= now.Minute() {
-				log.Printf("its time, scaling down %s", deploy.GetName())
+			if t.Hour() >= now.Hour() && t.Minute() >= now.Minute() && *deploy.Spec.Replicas > 0 {
+				log.Printf("scaling down %s", deploy.GetName())
 				deploy.Spec.Replicas = &zeroReplicas
 				_, err := clientset.
 					AppsV1beta2().
