@@ -3,15 +3,9 @@ release:
   github:
     owner: caarlos0
     name: kube-shutdown-after
-brew:
-  github:
-    owner: caarlos0
-    name: homebrew-tap
-  folder: Formula
 builds:
 - goos:
   - linux
-  - darwin
   goarch:
   - amd64
   binary: kube-shutdown-after
