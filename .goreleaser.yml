@@ -21,3 +21,10 @@ archive:
   files:
   - LICENSE*
   - README*
+  - deployment.yaml
+dockers:
+  - image: caarlos0/kube-shutdown-after
+    tag_templates:
+    - '{{ .Tag }}'
+    - 'v{{ .Major }}.{{ .Minor }}'
+    - 'latest'

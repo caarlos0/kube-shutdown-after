@@ -58,7 +58,7 @@ func main() {
 
 func shouldScale(deploy v1beta2.Deployment) bool {
 	now := time.Now().Local()
-	value, ok := deploy.Annotations["carlosbecker.com/shutdown-after"]
+	value, ok := deploy.Annotations["shutdown-after"]
 	if !ok {
 		log.Println("deployment is not annotated, ignoring:", deploy.Name)
 		return false
