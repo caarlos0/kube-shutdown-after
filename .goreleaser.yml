@@ -1,0 +1,23 @@
+project_name: kube-shutdown-after
+release:
+  github:
+    owner: caarlos0
+    name: kube-shutdown-after
+brew:
+  github:
+    owner: caarlos0
+    name: homebrew-tap
+  folder: Formula
+builds:
+- goos:
+  - linux
+  - darwin
+  goarch:
+  - amd64
+  binary: kube-shutdown-after
+archive:
+  format: tar.gz
+  name_template: '{{ .ProjectName }}_{{ .Version }}_{{ .Os }}_{{ .Arch }}'
+  files:
+  - LICENSE*
+  - README*
