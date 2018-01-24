@@ -58,7 +58,6 @@ func main() {
 }
 
 func shouldScale(deploy v1beta1.Deployment) bool {
-	now := time.Now().Local()
 	value, ok := deploy.Annotations["shutdown-after"]
 	if !ok {
 		if *debug {
@@ -69,12 +68,20 @@ func shouldScale(deploy v1beta1.Deployment) bool {
 	if *debug {
 		log.Printf("deployment %s is annotated with %s", deploy.GetName(), value)
 	}
-	t, err := time.Parse("15:04", value)
+	return *deploy.Spec.Replicas > 0 && isItTimeToScaleDown(value)
+}
+
+func isItTimeToScaleDown(value string) bool {
+	t, err := time.Parse("15:04 MST", value)
 	if err != nil {
-		log.Printf("failed to parse `%s`: not in `15:04` format", value)
+		log.Printf("failed to parse `%s`: not in `15:04 MST` format", value)
 		return false
 	}
-	return t.Hour() >= now.Hour() && t.Minute() >= now.Minute() && *deploy.Spec.Replicas > 0
+	now := time.Now().In(t.Location())
+	if *debug {
+	}
+	log.Printf("now is %s", now.String())
+	return now.Hour() >= t.Hour() && now.Minute() >= t.Minute()
 }
 
 func scaleDown(clientset *kubernetes.Clientset, deploy v1beta1.Deployment) error {
