@@ -19,6 +19,7 @@ var (
 	zeroReplicas int32
 
 	kubeconfig = flag.String("kubeconfig", "", "absolute path to the kubeconfig file")
+	debug      = flag.Bool("debug", false, "enable debug logs")
 )
 
 func init() {
@@ -60,10 +61,14 @@ func shouldScale(deploy v1beta1.Deployment) bool {
 	now := time.Now().Local()
 	value, ok := deploy.Annotations["shutdown-after"]
 	if !ok {
-		log.Println("deployment is not annotated, ignoring:", deploy.Name)
+		if *debug {
+			log.Println("deployment is not annotated, ignoring:", deploy.Name)
+		}
 		return false
 	}
-	log.Printf("deployment %s is annotated with %s", deploy.GetName(), value)
+	if *debug {
+		log.Printf("deployment %s is annotated with %s", deploy.GetName(), value)
+	}
 	t, err := time.Parse("15:04", value)
 	if err != nil {
 		log.Printf("failed to parse `%s`: not in `15:04` format", value)
