@@ -22,7 +22,7 @@ Annotate the deployments you want to be shutdown with `shutdown-after` and
 a time in `HH:mm TZ` format:
 
 ```sh
-kubectl annotate deploy whatever shutdown-after='19:00 GMT-2'
+kubectl annotate deploy whatever shutdown-after='19:00 -02'
 ```
 
 This will make `kube-shutdown-after` keep this deployment with 0 replicas

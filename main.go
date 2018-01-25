@@ -53,7 +53,7 @@ func main() {
 				log.Printf("failed to scale %s down: %s", deploy.GetName(), err)
 			}
 		}
-		time.Sleep(30 * time.Second)
+		time.Sleep(10 * time.Second)
 	}
 }
 
@@ -71,26 +71,19 @@ func shouldScale(deploy v1beta1.Deployment) bool {
 	return *deploy.Spec.Replicas > 0 && isItTimeToScaleDown(value)
 }
 
+const format = "15:04 -07"
+
 func isItTimeToScaleDown(value string) bool {
-	t, err := time.Parse("15:04 MST", value)
+	t, err := time.Parse(format, value)
 	if err != nil {
-		log.Printf("failed to parse `%s`: not in `15:04 MST` format", value)
+		log.Printf("failed to parse `%s`: not in `%s` format", value, format)
 		return false
 	}
-	// truncate to have only HH:mm, on the same TZ as the annotated time
-	now := time.Now().In(t.Location()).Truncate(time.Minute)
-	// t will initially be something like:
-	// 0000-01-01 19:50:00 -0200 GMT-2
-	// so add now.year, now.month and now.day, but remove 1 month and
-	// 1 day (because it is 0000-01-01)
-	t = t.AddDate(now.Year(), int(now.Month())-1, now.Day()-1).Truncate(time.Minute)
+	now := time.Now().In(t.Location())
 	if *debug {
-		log.Printf("t is %s and now is %s", t, now)
+		log.Printf("t=%s, now=%s", t.Format(format), now.Format(format))
 	}
-	// shut down only if the time is the same (HH:mm), so if someone
-	// is working late and scale the deployment back up, we will not scale
-	// it down again and again and again
-	return now.Equal(t)
+	return now.Hour() == t.Hour() && now.Minute() == t.Minute()
 }
 
 func scaleDown(clientset *kubernetes.Clientset, deploy v1beta1.Deployment) error {
