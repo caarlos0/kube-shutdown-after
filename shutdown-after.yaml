@@ -1,0 +1,28 @@
+apiVersion: apiextensions.k8s.io/v1beta1
+kind: CustomResourceDefinition
+metadata:
+  name: shutdownafters.k8s.carlosbecker.com
+spec:
+  group: k8s.carlosbecker.com
+  names:
+    kind: ShutdownAfter
+    plural: shutdownafters
+  scope: Namespaced
+  version: v1
+  validation:
+    openAPIV3Schema:
+      description: "Shutdown pods in sandbox clusters when it's not business hours"
+status:
+  acceptedNames:
+    kind: ""
+    plural: ""
+---
+
+apiVersion: "k8s.carlosbecker.com/v1"
+kind: ShutdownAfter
+metadata:
+  name: 9pm
+after: '21:00 -2'
+selector:
+  matchLabels:
+    tier: 9pm
