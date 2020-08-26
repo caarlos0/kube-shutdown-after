@@ -9,7 +9,9 @@ It can be useful to scale down sandbox clusters after work hours.
 Just run:
 
 ```sh
-kubectl create -f https://raw.githubusercontent.com/caarlos0/kube-shutdown-after/master/deployment.yaml
+helm repo add carlos https://carlos-charts.storage.googleapis.com
+helm repo update
+helm install carlos/kube-shutdown-after
 ```
 
 It will create a deployment in the `kube-system` namespace.
