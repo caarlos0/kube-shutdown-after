@@ -11,13 +11,14 @@ builds:
   binary: kube-shutdown-after
   env:
   - CGO_ENABLED=0
-archive:
-  format: tar.gz
-  name_template: '{{ .ProjectName }}_{{ .Version }}_{{ .Os }}_{{ .Arch }}'
-  files:
-  - LICENSE*
-  - README*
-  - deployment.yaml
+archives:
+  - id: kube-shutdown-after
+    name_template: '{{ .Binary }}_{{ .Os }}_{{ .Arch }}'
+    files:
+    - LICENSE*
+    - README*
+    - deployment.yaml
+    format: tar.gz
 dockers:
   - image: caarlos0/kube-shutdown-after
     tag_templates:
