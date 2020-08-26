@@ -5,7 +5,7 @@ import (
 	"log"
 	"time"
 
-	"k8s.io/api/apps/v1beta1"
+	v1 "k8s.io/api/apps/v1"
 	apiv1 "k8s.io/api/core/v1"
 
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -41,7 +41,7 @@ func main() {
 	}
 
 	for {
-		deploys, err := clientset.AppsV1beta1().Deployments(apiv1.NamespaceAll).List(metav1.ListOptions{})
+		deploys, err := clientset.AppsV1().Deployments(apiv1.NamespaceAll).List(metav1.ListOptions{})
 		if err != nil {
 			log.Fatalln("failed to get deployments:", err)
 		}
@@ -57,7 +57,7 @@ func main() {
 	}
 }
 
-func shouldScale(deploy v1beta1.Deployment) bool {
+func shouldScale(deploy v1.Deployment) bool {
 	value, ok := deploy.Annotations["shutdown-after"]
 	if !ok {
 		if *debug {
@@ -86,10 +86,10 @@ func isItTimeToScaleDown(value string) bool {
 	return now.Hour() == t.Hour() && now.Minute() == t.Minute()
 }
 
-func scaleDown(clientset *kubernetes.Clientset, deploy v1beta1.Deployment) error {
+func scaleDown(clientset *kubernetes.Clientset, deploy v1.Deployment) error {
 	log.Printf("scaling down %s", deploy.GetName())
 	deploy.Spec.Replicas = &zeroReplicas
-	_, err := clientset.AppsV1beta1().Deployments(deploy.GetNamespace()).
+	_, err := clientset.AppsV1().Deployments(deploy.GetNamespace()).
 		Update(&deploy)
 	return err
 }
