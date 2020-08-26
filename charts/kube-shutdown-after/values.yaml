@@ -6,7 +6,7 @@ replicaCount: 1
 
 image:
   repository: caarlos0/kube-shutdown-after
-  tag: latest
+  tag: v0.2.0
   pullPolicy: IfNotPresent
 
 imagePullSecrets: []
