@@ -4,24 +4,23 @@ release:
     owner: caarlos0
     name: kube-shutdown-after
 builds:
-- goos:
-  - linux
-  goarch:
-  - amd64
-  binary: kube-shutdown-after
-  env:
-  - CGO_ENABLED=0
+  - goos:
+      - linux
+    goarch:
+      - amd64
+    binary: kube-shutdown-after
+    env:
+      - CGO_ENABLED=0
 archives:
   - id: kube-shutdown-after
-    name_template: '{{ .Binary }}_{{ .Os }}_{{ .Arch }}'
+    name_template: "{{ .Binary }}_{{ .Os }}_{{ .Arch }}"
     files:
-    - LICENSE*
-    - README*
-    - deployment.yaml
+      - LICENSE*
+      - README*
+      - deployment.yaml
     format: tar.gz
 dockers:
-  - image: caarlos0/kube-shutdown-after
-    tag_templates:
-    - '{{ .Tag }}'
-    - 'v{{ .Major }}.{{ .Minor }}'
-    - 'latest'
+  - image_templates:
+      - "caarlos0/kube-shutdown-after:{{ .Tag }}"
+      - "caarlos0/kube-shutdown-after:v{{ .Major }}.{{ .Minor }}"
+      - "caarlos0/kube-shutdown-after:latest"
