@@ -1,3 +1,4 @@
+version: 2
 project_name: kube-shutdown-after
 release:
   github:
@@ -17,7 +18,8 @@ archives:
     files:
       - LICENSE*
       - README*
-    format: tar.gz
+    formats:
+      - tar.gz
 dockers:
   - image_templates:
       - "caarlos0/kube-shutdown-after:{{ .Tag }}"

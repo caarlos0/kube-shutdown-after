@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"flag"
 	"log"
 	"time"
@@ -41,7 +42,8 @@ func main() {
 	}
 
 	for {
-		deploys, err := clientset.AppsV1().Deployments(apiv1.NamespaceAll).List(metav1.ListOptions{})
+		ctx := context.Background()
+		deploys, err := clientset.AppsV1().Deployments(apiv1.NamespaceAll).List(ctx, metav1.ListOptions{})
 		if err != nil {
 			log.Fatalln("failed to get deployments:", err)
 		}
@@ -90,7 +92,7 @@ func scaleDown(clientset *kubernetes.Clientset, deploy v1.Deployment) error {
 	log.Printf("scaling down %s", deploy.GetName())
 	deploy.Spec.Replicas = &zeroReplicas
 	_, err := clientset.AppsV1().Deployments(deploy.GetNamespace()).
-		Update(&deploy)
+		Update(context.Background(), &deploy, metav1.UpdateOptions{})
 	return err
 }
 
