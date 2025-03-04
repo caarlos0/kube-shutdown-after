@@ -11,12 +11,12 @@ jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v4
-    - uses: actions/setup-go@v4
-      with:
-        go-version: stable
-    - run: go build -v ./...
-    - run: go test -v ./...
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v4
+        with:
+          go-version: stable
+      - run: go build ./...
+      - run: go test ./...
 
   dependabot:
     needs: [build] # <-- important!
